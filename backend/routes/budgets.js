@@ -1,12 +1,12 @@
 const router = require('express').Router();
-const auth = require('../middleware/auth');
+// const auth = require('../middleware/auth');
 const Budget = require('../models/Budget');
 const Transaction = require('../models/Transaction');
 
 // Get budgets with spending summary
-router.get('/:month', auth, async (req, res) => {
+router.get('/:month', async (req, res) => {
   const budgets = await Budget.find({
-    user: req.user.id, month: req.params.month
+     month: req.params.month
   });
   const summaries = await Promise.all(budgets.map(async b => {
     const spent = await Transaction.aggregate([
@@ -21,10 +21,24 @@ router.get('/:month', auth, async (req, res) => {
   res.json(summaries);
 });
 
-router.post('/', auth, async (req, res) => {
-  const budget = new Budget({ ...req.body, user: req.user.id });
-  await budget.save();
-  res.json(budget);
+router.post('/', async (req, res) => {
+  try {
+    console.log("BODY:", req.body); // 🔥 DEBUG
+
+    const budget = new Budget({
+      category: req.body.category,
+      limit: Number(req.body.limit), // 🔥 IMPORTANT
+      month: req.body.month
+    });
+
+    await budget.save();
+
+    res.json(budget);
+
+  } catch (err) {
+    console.log("ERROR:", err); // 🔥 SEE REAL ERROR
+    res.status(500).send(err.message);
+  }
 });
 
 module.exports = router;

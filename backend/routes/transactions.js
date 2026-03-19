@@ -4,24 +4,25 @@ const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
 
 // GET all transactions for logged-in user
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const transactions = await Transaction.find({ user: req.user.id })
+    const transactions = await Transaction.find()
                           .sort({ date: -1 });
     res.json(transactions);
   } catch(err) { res.status(500).send('Server Error'); }
 });
 
 // POST add new transaction
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { type, amount, category, description, date } = req.body;
     const transaction = new Transaction({
-      user: req.user.id, type, amount, category, description, date
-    });
+      type, amount, category, description, date
+  });
     await transaction.save();
 
     // Check budget alert
+    /*
     if (type === 'expense') {
       const month = new Date(date || Date.now())
         .toISOString().slice(0, 7);
@@ -44,6 +45,8 @@ router.post('/', auth, async (req, res) => {
         }
       }
     }
+    */
+   
     res.json({ transaction });
   } catch(err) { res.status(500).send('Server Error'); }
 });
